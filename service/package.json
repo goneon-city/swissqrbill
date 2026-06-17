@@ -1,0 +1,20 @@
+{
+  "name": "goneon-payment-slip-service",
+  "version": "1.0.0",
+  "description": "Swiss QR payment slip PDF generator for goNEON invoices",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pdfkit": "^0.13.0",
+    "pdf-lib": "^1.17.1",
+    "swissqrbill": "^4.3.0"
+  }
+}
