@@ -6,10 +6,9 @@ import { mapToSwissQRBillData } from './mapData.js';
  * Generates a payment slip PDF (A4 page, slip positioned at the bottom).
  * Returns a Buffer containing the PDF bytes.
  */
-export function generatePaymentSlipPDF(qrData) {
+export function generatePaymentSlipPDF(qrData, creditor) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    // A4 page — swissqrbill positions the 105mm slip at the bottom automatically
     const pdf = new PDFDocument({ size: 'A4', margin: 0 });
 
     pdf.on('data', chunk => chunks.push(chunk));
@@ -17,7 +16,7 @@ export function generatePaymentSlipPDF(qrData) {
     pdf.on('error', reject);
 
     try {
-      const billData = mapToSwissQRBillData(qrData);
+      const billData = mapToSwissQRBillData(qrData, creditor);
       const qrBill = new SwissQRBill(billData);
       qrBill.attachTo(pdf);
       pdf.end();
