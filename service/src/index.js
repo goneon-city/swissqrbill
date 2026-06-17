@@ -24,17 +24,13 @@ app.get('/health', (_req, res) => {
 });
 
 // ── POST /payment-slip ─────────────────────────────────────────────────────────
-// Returns a standalone A4 PDF with the SIX-compliant payment slip.
-// Body: { qr_data: { iban, amount, currency, reference_type, reference,
-//                    debtor_name, debtor_street, debtor_plz, debtor_city, debtor_country,
-//                    additional_info? } }
 app.post('/payment-slip', async (req, res) => {
   try {
-    const { qr_data } = req.body;
+    const { qr_data, creditor } = req.body;
     if (!qr_data || !qr_data.iban) {
       return res.status(400).json({ error: 'Missing or incomplete qr_data. Required: iban.' });
     }
-    const pdfBuffer = await generatePaymentSlipPDF(qr_data);
+    const pdfBuffer = await generatePaymentSlipPDF(qr_data, creditor);
     res.set('Content-Type', 'application/pdf');
     res.set('Content-Disposition', 'attachment; filename="payment-slip.pdf"');
     res.send(pdfBuffer);
@@ -45,17 +41,14 @@ app.post('/payment-slip', async (req, res) => {
 });
 
 // ── POST /invoice ──────────────────────────────────────────────────────────────
-// Merges an existing invoice PDF with the payment slip and returns the combined PDF.
-// Body: { qr_data: {...}, invoice_pdf: "<base64-encoded PDF>" }
-// If invoice_pdf is omitted, returns just the payment slip (same as /payment-slip).
 app.post('/invoice', async (req, res) => {
   try {
-    const { qr_data, invoice_pdf } = req.body;
+    const { qr_data, creditor, invoice_pdf } = req.body;
     if (!qr_data || !qr_data.iban) {
       return res.status(400).json({ error: 'Missing or incomplete qr_data. Required: iban.' });
     }
 
-    const slipBuffer = await generatePaymentSlipPDF(qr_data);
+    const slipBuffer = await generatePaymentSlipPDF(qr_data, creditor);
 
     if (!invoice_pdf) {
       res.set('Content-Type', 'application/pdf');
@@ -63,7 +56,6 @@ app.post('/invoice', async (req, res) => {
       return;
     }
 
-    // Merge: invoice pages first, then payment slip page
     const invoiceBytes = Buffer.from(invoice_pdf, 'base64');
     const merged = await PDFDocument.create();
 
